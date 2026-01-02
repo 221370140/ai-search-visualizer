@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Search Algorithms Visualization</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <header>
+    <h1>AI Search Algorithms on Graph</h1>
+    <p>BFS, DFS, and Uniform Cost Search Visualization</p>
+  </header>
+
+  <main class="container">
+
+    <!-- LEFT SIDE: CONTROLS -->
+    <section class="controls">
+
+      <h2>Search Configuration</h2>
+
+      <label>Start City</label>
+      <select id="startSelect"></select>
+
+      <label>Goal City</label>
+      <select id="goalSelect"></select>
+
+      <label>Algorithm</label>
+      <div class="buttons">
+        <button class="seg-btn" data-algo="BFS">BFS</button>
+        <button class="seg-btn active" data-algo="DFS">DFS</button>
+        <button class="seg-btn" data-algo="UCS">UCS</button>
+      </div>
+
+      <label>Animation Delay (ms)</label>
+      <input type="number" id="delayInput" value="1000" min="0">
+
+      <label>Visualization Mode</label>
+      <select id="modeSelect">
+        <option value="visited">Visited Nodes + Path</option>
+        <option value="pathOnly">Final Path Only</option>
+      </select>
+
+      <div class="actions">
+        <button id="findBtn">Find Path</button>
+        <button id="resetBtn">Reset</button>
+      </div>
+
+      <h2>Output</h2>
+
+      <p><b>Algorithm:</b> <span id="outAlgo">DFS</span></p>
+      <p><b>Nodes Expanded:</b> <span id="outSteps">0</span></p>
+      <p><b>Total Cost:</b> <span id="outCost">0</span></p>
+
+      <p><b>Path:</b></p>
+      <div id="outPath">—</div>
+
+      <p id="outNote">
+        DFS explores depth-first and does not guarantee the shortest path.
+      </p>
+
+      <footer>
+        CS-415 – Artificial Intelligence<br>
+        Assignment 1: Search Algorithms
+      </footer>
+
+    </section>
+
+    <!-- RIGHT SIDE: MAP -->
+    <section class="map">
+      <h2>Graph Visualization</h2>
+      <svg id="mapSvg" viewBox="0 0 1000 600"></svg>
+    </section>
+
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
