@@ -1,4 +1,4 @@
-import { buildGraph, cities, projectCitiesToSvg } from "./data/graphData.js";
+// graphData.js is loaded before this file via a script tag
 
 
 
@@ -191,3 +191,140 @@ function renderGraph() {
     nodes.set(c.id, circle);
   });
 }
+
+/* ── Populate dropdowns ─────────────────────────────── */
+const startSelect = document.getElementById("startSelect");
+const goalSelect = document.getElementById("goalSelect");
+
+cities.forEach(c => {
+  startSelect.add(new Option(c.id, c.id));
+  goalSelect.add(new Option(c.id, c.id));
+});
+
+// Set sensible defaults
+startSelect.value = "Karachi";
+goalSelect.value = "Islamabad";
+
+/* ── Algorithm toggle buttons ───────────────────────── */
+let selectedAlgo = "DFS";
+const algoBtns = document.querySelectorAll(".seg-btn");
+
+algoBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    algoBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedAlgo = btn.dataset.algo;
+    document.getElementById("outAlgo").textContent = selectedAlgo;
+    updateNote();
+  });
+});
+
+/* ── Algorithm descriptions ─────────────────────────── */
+const notes = {
+  BFS: "BFS explores level by level and guarantees the shortest path in unweighted graphs.",
+  DFS: "DFS explores depth-first and does not guarantee the shortest path.",
+  UCS: "UCS expands the lowest-cost node first and guarantees the optimal (least-cost) path."
+};
+
+function updateNote() {
+  document.getElementById("outNote").textContent = notes[selectedAlgo];
+}
+
+/* ── Visualization helpers ──────────────────────────── */
+function resetStyles() {
+  nodes.forEach(circle => {
+    circle.removeAttribute("style");
+    circle.setAttribute("r", 10);
+  });
+  edges.forEach(line => {
+    line.classList.remove("active-path");
+    line.removeAttribute("style");
+  });
+}
+
+async function animateResult(result) {
+  const delay = parseInt(document.getElementById("delayInput").value, 10) || 500;
+  const mode = document.getElementById("modeSelect").value;
+
+  resetStyles();
+
+  /* 1. Animate visited nodes (unless pathOnly mode) */
+  if (mode === "visited") {
+    for (const cityId of result.visitedOrder) {
+      const circle = nodes.get(cityId);
+      if (circle) {
+        circle.style.fill = "#FFA500";   // orange = visited
+        circle.setAttribute("r", 13);
+      }
+      await pause(delay);
+    }
+  }
+
+  /* 2. Animate path edges one-by-one with glow */
+  for (let i = 0; i < result.path.length - 1; i++) {
+    const a = result.path[i];
+    const b = result.path[i + 1];
+    const key1 = `${a}__${b}`;
+    const key2 = `${b}__${a}`;
+    const line = edges.get(key1) || edges.get(key2);
+    if (line) {
+      line.classList.add("active-path");
+    }
+    await pause(delay);
+  }
+
+  /* 3. Highlight final path nodes */
+  result.path.forEach(cityId => {
+    const circle = nodes.get(cityId);
+    if (circle) {
+      circle.style.fill = "#00f5ff";
+      circle.setAttribute("r", 14);
+    }
+  });
+
+  /* Mark start and goal with distinct colours */
+  const startCircle = nodes.get(result.path[0]);
+  const goalCircle = nodes.get(result.path[result.path.length - 1]);
+  if (startCircle) startCircle.style.fill = "#00cc44";   // green
+  if (goalCircle) goalCircle.style.fill = "#cc0000";   // red
+}
+
+/* ── Find-path handler ──────────────────────────────── */
+document.getElementById("findBtn").addEventListener("click", async () => {
+  const start = startSelect.value;
+  const goal = goalSelect.value;
+
+  if (start === goal) {
+    alert("Start and goal are the same city!");
+    return;
+  }
+
+  let result;
+  switch (selectedAlgo) {
+    case "BFS": result = breadthFirst(graph, start, goal); break;
+    case "DFS": result = depthFirst(graph, start, goal); break;
+    case "UCS": result = uniformCost(graph, start, goal); break;
+  }
+
+  /* Update output panel */
+  document.getElementById("outAlgo").textContent = result.algorithm;
+  document.getElementById("outSteps").textContent = result.steps;
+  document.getElementById("outCost").textContent = result.cost === Infinity ? "∞" : result.cost;
+  document.getElementById("outPath").textContent = result.path.length
+    ? result.path.join(" → ")
+    : "No path found";
+
+  updateNote();
+  await animateResult(result);
+});
+
+/* ── Reset handler ──────────────────────────────────── */
+document.getElementById("resetBtn").addEventListener("click", () => {
+  resetStyles();
+  document.getElementById("outSteps").textContent = "0";
+  document.getElementById("outCost").textContent = "0";
+  document.getElementById("outPath").textContent = "—";
+});
+
+/* ── Initial render ─────────────────────────────────── */
+renderGraph();
